@@ -3,233 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAYRECON | Dashboard</title>
+    <title>PAYRECON | Business Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #f4f7f6;
-            color: #333;
-            display: flex;
-            height: 100vh;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7f6; color: #333; display: flex; height: 100vh; }
 
         /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background-color: #0a192f;
-            color: white;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo-link {
-            text-decoration: none;
-            color: white;
-        }
-
-        .sidebar .logo {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 40px;
-        }
-
-        .sidebar .logo span {
-            color: #64ffda;
-        }
-
-        .sidebar a.nav-item {
-            color: #8892b0;
-            text-decoration: none;
-            padding: 12px 0;
-            font-size: 16px;
-            border-bottom: 1px solid #112240;
-        }
-
-        .sidebar a.nav-item:hover, .sidebar a.nav-item.active {
-            color: #64ffda;
-        }
+        .sidebar { width: 250px; background-color: #0a192f; color: white; padding: 20px; display: flex; flex-direction: column; }
+        .logo-link { text-decoration: none; color: white; }
+        .sidebar .logo { font-size: 22px; font-weight: bold; margin-bottom: 40px; }
+        .sidebar .logo span { color: #64ffda; }
+        .sidebar a.nav-item { color: #8892b0; text-decoration: none; padding: 12px 0; font-size: 16px; border-bottom: 1px solid #112240; transition: color 0.3s; }
+        .sidebar a.nav-item:hover, .sidebar a.nav-item.active { color: #64ffda; font-weight: bold; }
 
         /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            color: #0a192f;
-        }
-
-        .user-profile {
-            background-color: #0a192f;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { font-size: 24px; color: #0a192f; }
+        .user-profile { background-color: #0a192f; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; }
 
         /* Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 4px solid #64ffda; }
+        .stat-card h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
+        .stat-card p { font-size: 24px; font-weight: bold; color: #0a192f; }
 
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border-left: 4px solid #64ffda;
-        }
-
-        .stat-card h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .stat-card p {
-            font-size: 24px;
-            font-weight: bold;
-            color: #0a192f;
-        }
-
-        /* Table & Search */
-        .table-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .table-header h2 {
-            font-size: 18px;
-            color: #0a192f;
-        }
-
-        /* NEW: Search Bar Styles */
-        .search-bar {
-            padding: 10px 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            width: 250px;
-            outline: none;
-        }
-
-        .search-bar:focus {
-            border-color: #64ffda;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            font-size: 14px;
-        }
-
-        th {
-            color: #666;
-            font-weight: 600;
-        }
-
-        .status-matched {
-            background-color: #e6fffa;
-            color: #00a884;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .status-unmatched {
-            background-color: #ffe6e6;
-            color: #d32f2f;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
+        /* Table */
+        .table-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .table-header h2 { font-size: 18px; color: #0a192f; }
+        .search-bar { padding: 10px 15px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { color: #666; font-weight: 600; }
+        .status-matched { background-color: #e6fffa; color: #00a884; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-unmatched { background-color: #ffe6e6; color: #d32f2f; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
 
         /* Mobile */
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-            .sidebar {
-                width: 100%;
-                padding: 15px;
-                flex-direction: row;
-                overflow-x: auto;
-                align-items: center;
-            }
-            .sidebar .logo {
-                margin-bottom: 0;
-                margin-right: 20px;
-            }
-            .sidebar a.nav-item {
-                padding: 0 15px;
-                border-bottom: none;
-                white-space: nowrap;
-            }
-            .main-content {
-                padding: 15px;
-            }
-            .table-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            .search-bar {
-                width: 100%;
-            }
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 15px; flex-direction: row; overflow-x: auto; align-items: center; }
+            .sidebar .logo { margin-bottom: 0; margin-right: 20px; }
+            .sidebar a.nav-item { padding: 0 15px; border-bottom: none; white-space: nowrap; }
+            .main-content { padding: 15px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
     <div class="sidebar">
+        <!-- Clicking the logo goes back to the homepage -->
         <a href="index.html" class="logo-link">
             <div class="logo">PAY<span>RECON</span></div>
         </a>
-        <a href="#" class="nav-item active">Dashboard</a>
-        <a href="#" class="nav-item">Transactions</a>
-        <a href="#" class="nav-item">Reconciliation</a>
-        <a href="#" class="nav-item">Reports</a>
-        <a href="#" class="nav-item">Settings</a>
+        
+        <a href="dashboard.html" class="nav-item active">Dashboard</a>
+        <a href="personal.html" class="nav-item">Personal Tracker</a>
+        <a href="admin.html" class="nav-item">Admin Panel</a>
+        <a href="index.html" class="nav-item">Log Out</a>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content">
         <div class="header">
             <h1>Business Overview</h1>
@@ -239,7 +72,7 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <h3>Total Volume</h3>
-                <p>$145,200.00</p>
+                <p>₦145,200.00</p>
             </div>
             <div class="stat-card" style="border-left-color: #00a884;">
                 <h3>Matched Payments</h3>
@@ -254,7 +87,6 @@
         <div class="table-container">
             <div class="table-header">
                 <h2>Recent Transactions</h2>
-                <!-- NEW: Search Input -->
                 <input type="text" id="searchInput" class="search-bar" placeholder="Search ID or Status...">
             </div>
             
@@ -269,22 +101,22 @@
                 <tbody id="transactionTable">
                     <tr>
                         <td>TXN-8942</td>
-                        <td>$450.00</td>
+                        <td>₦450.00</td>
                         <td><span class="status-matched">Matched</span></td>
                     </tr>
                     <tr>
                         <td>TXN-8943</td>
-                        <td>$1,200.50</td>
+                        <td>₦1,200.50</td>
                         <td><span class="status-matched">Matched</span></td>
                     </tr>
                     <tr>
                         <td>TXN-8944</td>
-                        <td>$85.00</td>
+                        <td>₦85.00</td>
                         <td><span class="status-unmatched">Unmatched</span></td>
                     </tr>
                     <tr>
                         <td>TXN-8945</td>
-                        <td>$3,000.00</td>
+                        <td>₦3,000.00</td>
                         <td><span class="status-matched">Matched</span></td>
                     </tr>
                 </tbody>
@@ -292,21 +124,13 @@
         </div>
     </div>
 
-    <!-- NEW: JavaScript to make the search work -->
     <script>
         document.getElementById('searchInput').addEventListener('keyup', function() {
-            // Get the text typed in the search box and make it lowercase
             let searchValue = this.value.toLowerCase();
-            
-            // Get all the rows in the table body
             let tableRows = document.querySelectorAll('#transactionTable tr');
             
-            // Loop through each row
             tableRows.forEach(function(row) {
-                // Get the text inside this row
                 let rowText = row.textContent.toLowerCase();
-                
-                // If the row contains the search text, show it. Otherwise, hide it.
                 if (rowText.includes(searchValue)) {
                     row.style.display = '';
                 } else {
@@ -316,4 +140,4 @@
         });
     </script>
 </body>
-</html>
+    </html>
