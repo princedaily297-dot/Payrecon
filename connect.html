@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAYRECON | Connect Bank</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #1e3a8a;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+
+        .sidebar .logo span { color: #60a5fa; }
+
+        .sidebar a.nav-item {
+            color: #bfdbfe;
+            text-decoration: none;
+            padding: 12px 0;
+            font-size: 16px;
+            border-bottom: 1px solid #1e40af;
+        }
+
+        .sidebar a.nav-item:hover, .sidebar a.nav-item.active {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        /* Connect UI */
+        .sync-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .sync-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .sync-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .sync-card h2 {
+            font-size: 18px;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .sync-card p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .btn-sync {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .btn-sync:hover { background-color: #2563eb; }
+        .btn-sync:disabled { background-color: #94a3b8; cursor: not-allowed; }
+
+        /* File Upload Styling */
+        .file-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Status Message */
+        .status-msg {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .status-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-loading { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 15px; flex-direction: row; overflow-x: auto; align-items: center; }
+            .sidebar .logo { margin-bottom: 0; margin-right: 20px; }
+            .sidebar a.nav-item { padding: 0 15px; border-bottom: none; white-space: nowrap; }
+            .main-content { padding: 15px; }
+            .sync-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">PAY<span>RECON</span> <br><span style="font-size:12px; font-weight:normal; color:white;">Personal Tracker</span></div>
+        <a href="personal.html" class="nav-item">My Overview</a>
+        <a href="connect.html" class="nav-item active">Sync Bank Data</a>
+        <a href="index.html" class="nav-item">Log Out</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Import Real Transactions</h1>
+            <p>Securely connect your bank or upload a statement to automatically track where your money goes.</p>
+        </div>
+
+        <div class="sync-container">
+            
+            <!-- Option 1: Real Bank API (Simulated) -->
+            <div class="sync-card">
+                <div class="sync-icon">🏦</div>
+                <h2>Connect Bank via API</h2>
+                <p>Use Open Banking (Mono/Plaid) to securely link your account. We never see your password.</p>
+                <button class="btn-sync" id="apiBtn" onclick="simulateApiSync()">Connect Securely</button>
+            </div>
+
+            <!-- Option 2: CSV Upload (Actually works!) -->
+            <div class="sync-card">
+                <div class="sync-icon">📄</div>
+                <h2>Upload Bank Statement</h2>
+                <p>Download a CSV file from your bank app and upload it here. We will auto-categorize it.</p>
+                <div class="file-upload-wrapper">
+                    <button class="btn-sync" style="background-color: #10b981;">Choose CSV File</button>
+                    <input type="file" id="csvFile" accept=".csv" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Message Area -->
+        <div id="statusMsg" class="status-msg"></div>
+
+        <!-- Form to Paste CSV Data (Fallback for Android file pickers) -->
+        <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 12px;">
+            <h3 style="margin-bottom: 10px; color: #1e3a8a;">Or Paste Statement Data</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Format: Date, Description, Amount, Type (POS/Bank)</p>
+            <textarea id="csvInput" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;" placeholder="12/10/2026, Uber Ride, -15.00, POS&#10;11/10/2026, Salary, 3000.00, Bank"></textarea>
+            <button class="btn-sync" style="width: auto; padding: 10px 20px;" onclick="processCSVData()">Process Data</button>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(text, type) {
+            let el = document.getElementById('statusMsg');
+            el.textContent = text;
+            el.className = 'status-msg status-' + type;
+            el.style.display = 'block';
+        }
+
+        // 1. Simulate the Open Banking API
+        function simulateApiSync() {
+            let btn = document.getElementById('apiBtn');
+            btn.textContent = "Connecting to Bank...";
+            btn.disabled = true;
+            showStatus("Waiting for bank authorization...", "loading");
+
+            // Simulate a 3-second network delay
+            setTimeout(() => {
+                showStatus("Successfully synced 142 transactions from your bank!", "success");
+                btn.textContent = "✓ Connected";
+                btn.style.backgroundColor = "#10b981";
+                
+                // In a real app, you would fetch the JSON data here and save it to localStorage.
+            }, 3000);
+        }
+
+        // 2. Handle actual file upload
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                // Send the text content to the parser
+                parseCSVText(content);
+            };
+            reader.readAsText(file);
+        }
+
+        // 3. Handle pasted text
+        function processCSVData() {
+            const text = document.getElementById('csvInput').value;
+            if (!text) {
+                alert("Please paste some data first.");
+                return;
+            }
+            parseCSVText(text);
+        }
+
+        // 4. The Parser Logic
+        function parseCSVText(text) {
+            const lines = text.split('\n');
+            let newTransactions = [];
+
+            lines.forEach(line => {
+                if (!line.trim()) return; // Skip empty lines
+                
+                // Split by comma
+                const parts = line.split(',');
+                if (parts.length >= 3) {
+                    let date = parts[0].trim();
+                    let desc = parts[1].trim();
+                    let amountStr = parts[2].trim();
+                    let typeStr = parts[3] ? parts[3].trim() : "Bank";
+                    
+                    let amount = parseFloat(amountStr);
+                    
+                    if (!isNaN(amount)) {
+                        // Auto-categorize based on description
+                        let category = "Shopping";
+                        let lowerDesc = desc.toLowerCase();
+                        if (lowerDesc.includes('uber') || lowerDesc.includes('bolt') || lowerDesc.includes('bus')) category = "Transport";
+                        if (lowerDesc.includes('food') || lowerDesc.includes('restaurant') || lowerDesc.includes('market')) category = "Food";
+                        if (lowerDesc.includes('airtime') || lowerDesc.includes('data') || lowerDesc.includes('bill')) category = "Bills";
+                        if (amount > 0) category = "Income";
+
+                        newTransactions.push({
+                            date: date,
+                            type: typeStr.toLowerCase().includes('pos') ? 'pos' : 'bank',
+                            typeText: typeStr,
+                            desc: desc,
+                            amount: amount,
+                            category: category
+                        });
+                    }
+                }
+            });
+
+            if (newTransactions.length > 0) {
+                showStatus(`Successfully imported ${newTransactions.length} real transactions!`, "success");
+                
+                // Save to localStorage so it shows up in personal.html
+                // Get existing, add new to the TOP
+                let existing = JSON.parse(localStorage.getItem('payrecon_personal_data_v2')) || [];
+                let combined = [...newTransactions, ...existing];
+                localStorage.setItem('payrecon_personal_data_v2', JSON.stringify(combined));
+                
+                setTimeout(() => {
+                    window.location.href = "personal.html";
+                }, 2000);
+            } else {
+                alert("Could not read the data. Please make sure it is comma-separated.");
+            }
+        }
+    </script>
+</body>
+</html>
