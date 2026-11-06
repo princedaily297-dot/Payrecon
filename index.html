@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAYRECON | Financial Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0a192f;
+            color: #e6f1ff;
+            line-height: 1.6;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background-color: #112240;
+            border-bottom: 1px solid #233554;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .logo span {
+            color: #64ffda;
+        }
+
+        .nav-links a {
+            color: #e6f1ff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #64ffda;
+        }
+
+        .btn-login {
+            border: 1px solid #64ffda;
+            padding: 8px 16px;
+            border-radius: 4px;
+            color: #64ffda !important;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .hero h1 {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span {
+            color: #64ffda;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #8892b0;
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+        }
+
+        .cta-button {
+            background-color: #64ffda;
+            color: #0a192f;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background 0.3s;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            background-color: #8affdf;
+        }
+
+        .features {
+            padding: 80px 20px;
+            background-color: #0a192f;
+            text-align: center;
+        }
+
+        .features h2 {
+            font-size: 32px;
+            margin-bottom: 40px;
+        }
+
+        .feature-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background-color: #112240;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #233554;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #64ffda;
+        }
+
+        .feature-card h3 {
+            color: #64ffda;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #8892b0;
+            font-size: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .feature-grid {
+                flex-direction: row;
+            }
+            .feature-card {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">PAY<span>RECON</span></div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#">Pricing</a>
+            <a href="#">Contact</a>
+            <a href="dashboard.html" class="btn-login">Sign In</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Automated Reconciliation for <span>Modern Business</span></h1>
+        <p>Match payments with orders, identify discrepancies, and take control of your financial transaction intelligence.</p>
+        <a href="dashboard.html" class="cta-button">Get Started</a>
+    </section>
+
+    <section class="features" id="features">
+        <h2>Why Choose <span style="color: #64ffda;">PAYRECON</span>?</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Automated Matching</h3>
+                <p>Instantly match incoming payments with your business orders. Save hours of manual spreadsheet work.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Discrepancy Alerts</h3>
+                <p>Identify missing payments, duplicate records, and mismatched amounts immediately with our intelligent engine.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Financial Reports</h3>
+                <p>Generate clean, exportable reconciliation reports for your accounting team and auditors.</p>
+            </div>
+        </div>
+    </section>
+
+</body>
+  </html>
