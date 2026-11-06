@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAYRECON | Connect Bank</title>
-    <!-- THIS SCRIPT ALLOWS US TO READ EXCEL FILES DIRECTLY -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f0f4f8; color: #333; display: flex; height: 100vh; }
@@ -29,7 +27,6 @@
         .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
         .status-msg { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; display: none; }
         .status-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .status-loading { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; padding: 15px; flex-direction: row; overflow-x: auto; align-items: center; }
@@ -41,160 +38,167 @@
     </style>
 </head>
 <body>
-
     <div class="sidebar">
         <div class="logo">PAY<span>RECON</span> <br><span style="font-size:12px; font-weight:normal; color:white;">Personal Tracker</span></div>
         <a href="personal.html" class="nav-item">My Overview</a>
         <a href="connect.html" class="nav-item active">Sync Bank Data</a>
         <a href="index.html" class="nav-item">Log Out</a>
     </div>
-
     <div class="main-content">
         <div class="header">
             <h1>Import Real Transactions</h1>
-            <p>Securely upload a CSV or Excel statement directly from your bank app.</p>
+            <p>Upload a CSV or Excel statement. Our smart engine automatically detects any Nigerian bank.</p>
         </div>
-
         <div class="sync-container">
             <div class="sync-card">
                 <div class="sync-icon">🏦</div>
                 <h2>Connect Bank via API</h2>
-                <p>Use Open Banking (Mono/Plaid) to securely link your account. We never see your password.</p>
-                <button class="btn-sync" id="apiBtn" onclick="simulateApiSync()">Connect Securely</button>
+                <p>Coming soon.</p>
+                <button class="btn-sync" disabled style="background-color: #94a3b8;">Coming Soon</button>
             </div>
-
             <div class="sync-card">
                 <div class="sync-icon">📊</div>
-                <h2>Upload Statement (Excel or CSV)</h2>
-                <p>Download a statement from your bank app and upload it here. We support .xlsx, .xls, and .csv files.</p>
+                <h2>Upload Statement</h2>
+                <p>Select a .xlsx, .xls, or .csv file directly from your bank.</p>
                 <div class="file-upload-wrapper">
                     <button class="btn-sync" style="background-color: #10b981;">Choose File</button>
-                    <!-- UPDATED TO ACCEPT EXCEL AND CSV -->
                     <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" onchange="handleFileUpload(event)">
                 </div>
             </div>
         </div>
-
         <div id="statusMsg" class="status-msg"></div>
-
-        <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 12px;">
-            <h3 style="margin-bottom: 10px; color: #1e3a8a;">Or Paste Statement Data</h3>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Paste the raw text from your bank statement below if you don't have a file.</p>
-            <textarea id="csvInput" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;" placeholder="12/10/2026, Uber Ride, -15.00, POS&#10;11/10/2026, Salary, 3000.00, Bank"></textarea>
-            <button class="btn-sync" style="width: auto; padding: 10px 20px;" onclick="processCSVData()">Process Data</button>
-        </div>
     </div>
 
     <script>
         function showStatus(text, type) {
             let el = document.getElementById('statusMsg');
-            el.textContent = text;
-            el.className = 'status-msg status-' + type;
-            el.style.display = 'block';
+            el.textContent = text; el.className = 'status-msg status-' + type; el.style.display = 'block';
         }
 
-        function simulateApiSync() {
-            let btn = document.getElementById('apiBtn');
-            btn.textContent = "Connecting to Bank...";
-            btn.disabled = true;
-            showStatus("Waiting for bank authorization...", "loading");
-            setTimeout(() => {
-                showStatus("Successfully synced 142 transactions from your bank!", "success");
-                btn.textContent = "✓ Connected";
-                btn.style.backgroundColor = "#10b981";
-            }, 3000);
-        }
-
-        // --- NEW: HANDLE BOTH EXCEL AND CSV FILES ---
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
-                
-                // Use SheetJS to read the file as a workbook
                 const workbook = XLSX.read(data, {type: 'array'});
-                
-                // Get the first sheet
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                // Convert the sheet to CSV text so our smart parser can read it
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const csvText = XLSX.utils.sheet_to_csv(worksheet);
-                
-                // Send the text to our parser
                 parseCSVText(csvText);
             };
-            // Read file as an ArrayBuffer for Excel support
             reader.readAsArrayBuffer(file);
         }
 
-        function processCSVData() {
-            const text = document.getElementById('csvInput').value;
-            if (!text) return alert("Please paste some data first.");
-            parseCSVText(text);
+        // --- ULTIMATE NIGERIAN BANK DETECTION ---
+        const bankDatabase = {
+            'opay': { name: 'OPay', color: '#00b875' },
+            'kuda': { name: 'Kuda', color: '#4b5563' },
+            'gtb': { name: 'GTBank', color: '#f59e0b' },
+            'guaranty': { name: 'GTBank', color: '#f59e0b' },
+            'access': { name: 'Access', color: '#1d4ed8' },
+            'zenith': { name: 'Zenith', color: '#dc2626' },
+            'uba': { name: 'UBA', color: '#dc2626' },
+            'first': { name: 'First Bank', color: '#1e3a8a' },
+            'palmpay': { name: 'PalmPay', color: '#7c3aed' },
+            'moniepoint': { name: 'Moniepoint', color: '#1d4ed8' },
+            'wema': { name: 'Wema', color: '#9333ea' },
+            'polaris': { name: 'Polaris', color: '#7e22ce' },
+            'fidelity': { name: 'Fidelity', color: '#065f46' },
+            'fcmb': { name: 'FCMB', color: '#8b5cf6' },
+            'union': { name: 'Union', color: '#0284c7' },
+            'sterling': { name: 'Sterling', color: '#dc2626' },
+            'providus': { name: 'Providus', color: '#4f46e5' },
+            'stanbic': { name: 'Stanbic', color: '#2563eb' },
+            'ecobank': { name: 'Ecobank', color: '#06b6d4' },
+            'heritage': { name: 'Heritage', color: '#16a34a' },
+            'keystone': { name: 'Keystone', color: '#ea580c' },
+            'unity': { name: 'Unity', color: '#d97706' },
+            'citibank': { name: 'Citibank', color: '#0284c7' },
+            'paystack': { name: 'Paystack', color: '#0ba4db' },
+            'flutterwave': { name: 'Flutterwave', color: '#f59e0b' },
+            'pos': { name: 'POS Terminal', color: '#8b5cf6' }
+        };
+
+        function detectBank(desc) {
+            let d = desc.toLowerCase();
+            
+            // Loop through our bank database to find a match
+            for (let key in bankDatabase) {
+                if (d.includes(key)) {
+                    return bankDatabase[key];
+                }
+            }
+
+            // SMART FALLBACK: If it's an unknown bank, grab the first 2 letters of the description
+            let words = desc.split(' ');
+            let initials = words.length > 0 ? words[0].substring(0, 2).toUpperCase() : "BK";
+            return { name: "Bank Transfer", color: "#64748b", customInitial: initials };
         }
 
-        // SMART PARSER (Handles Debit/Credit columns too)
         function parseCSVText(text) {
             const lines = text.split('\n');
             let newTransactions = [];
+            const dateRegex = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})|(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})|([0-9]{1,2}\s+[A-Za-z]{3}\s+[0-9]{2,4})/;
 
             lines.forEach(line => {
-                if (!line.trim()) return; 
-                
+                if (!line.trim()) return;
                 const parts = line.split(',').map(p => p.trim());
-                
-                // Skip header row
-                if (parts[0].toLowerCase().includes('date') || parts[1].toLowerCase().includes('description')) return;
+                if (parts.length < 3) return;
 
-                if (parts.length >= 3) {
-                    let date = parts[0];
-                    let desc = parts[1];
-                    let amount = 0;
-                    
-                    if (parts.length === 3 || parts.length === 4) {
-                        amount = parseFloat(parts[2].replace(/[^0-9.-]+/g,"")); 
-                    } 
-                    else if (parts.length >= 5) {
-                        let debit = parseFloat(parts[2].replace(/[^0-9.-]+/g,""));
-                        let credit = parseFloat(parts[3].replace(/[^0-9.-]+/g,""));
-                        if (!isNaN(debit) && debit > 0) amount = -debit;
-                        else if (!isNaN(credit) && credit > 0) amount = credit;
-                    }
+                let date = parts[0];
+                let desc = parts[1] || "";
+                if (!dateRegex.test(date)) return;
 
-                    if (!isNaN(amount) && amount !== 0) {
-                        let category = "Shopping";
-                        let lowerDesc = desc.toLowerCase();
-                        if (lowerDesc.includes('uber') || lowerDesc.includes('bolt') || lowerDesc.includes('transport')) category = "Transport";
-                        if (lowerDesc.includes('food') || lowerDesc.includes('restaurant') || lowerDesc.includes('market') || lowerDesc.includes('eat')) category = "Food";
-                        if (lowerDesc.includes('airtime') || lowerDesc.includes('data') || lowerDesc.includes('bill') || lowerDesc.includes('electricity')) category = "Bills";
-                        if (amount > 0) category = "Income";
+                let lowerDesc = desc.toLowerCase();
+                if (lowerDesc.includes('total') || lowerDesc.includes('balance') || lowerDesc.includes('closing') || lowerDesc.includes('opening')) return;
 
-                        newTransactions.push({
-                            date: date,
-                            type: desc.toLowerCase().includes('pos') ? 'pos' : 'bank',
-                            typeText: desc.toLowerCase().includes('pos') ? 'POS' : 'Bank Transfer',
-                            desc: desc,
-                            amount: amount,
-                            category: category
-                        });
-                    }
+                let amount = 0;
+                let cleanNum = (str) => {
+                    if (!str) return NaN;
+                    let cleaned = str.replace(/[^0-9.-]+/g,""); 
+                    if (cleaned.replace(/[.-]/g, '').length > 10) return NaN; 
+                    return parseFloat(cleaned);
+                };
+
+                if (parts.length === 3 || parts.length === 4) {
+                    amount = cleanNum(parts[2]);
+                } else if (parts.length >= 5) {
+                    let debit = cleanNum(parts[2]);
+                    let credit = cleanNum(parts[3]);
+                    if (!isNaN(debit) && debit > 0) amount = -debit;
+                    else if (!isNaN(credit) && credit > 0) amount = credit;
                 }
+
+                if (isNaN(amount) || amount === 0 || Math.abs(amount) > 100000000) return;
+
+                let category = "Shopping";
+                if (lowerDesc.includes('uber') || lowerDesc.includes('bolt') || lowerDesc.includes('transport')) category = "Transport";
+                if (lowerDesc.includes('food') || lowerDesc.includes('market') || lowerDesc.includes('eat')) category = "Food";
+                if (lowerDesc.includes('airtime') || lowerDesc.includes('data') || lowerDesc.includes('bill')) category = "Bills";
+                if (amount > 0) category = "Income";
+
+                // Detect Bank
+                let bankInfo = detectBank(desc);
+
+                newTransactions.push({
+                    date: date,
+                    providerName: bankInfo.name,
+                    providerColor: bankInfo.color,
+                    providerInitial: bankInfo.customInitial || bankInfo.name.substring(0, 2).toUpperCase(),
+                    desc: desc,
+                    amount: amount,
+                    category: category
+                });
             });
 
             if (newTransactions.length > 0) {
-                showStatus(`Successfully imported ${newTransactions.length} real transactions! Redirecting...`, "success");
-                
+                showStatus(`Successfully extracted ${newTransactions.length} transactions! Redirecting...`, "success");
                 let existing = JSON.parse(localStorage.getItem('payrecon_data_v3')) || [];
                 let combined = [...newTransactions, ...existing];
                 localStorage.setItem('payrecon_data_v3', JSON.stringify(combined));
-                
                 setTimeout(() => { window.location.href = "personal.html"; }, 2000);
             } else {
-                alert("Could not read the data. Make sure it's a valid bank statement with Date, Description, and Amount.");
+                alert("Could not find any valid transaction rows.");
             }
         }
     </script>
