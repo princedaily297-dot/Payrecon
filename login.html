@@ -5,140 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAYRECON | Secure Login</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #0a192f;
-            color: #e6f1ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .login-container {
-            background-color: #112240;
-            padding: 40px;
-            border-radius: 8px;
-            border: 1px solid #233554;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .logo span {
-            color: #64ffda;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #8892b0;
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: #ccd6f6;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            background-color: #0a192f;
-            border: 1px solid #233554;
-            border-radius: 4px;
-            color: #e6f1ff;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus {
-            border-color: #64ffda;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background-color: #64ffda;
-            color: #0a192f;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .login-btn:hover {
-            background-color: #8affdf;
-        }
-
-        .links {
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .links a {
-            color: #8892b0;
-            text-decoration: none;
-            display: block;
-            margin-bottom: 10px;
-            transition: color 0.3s;
-        }
-
-        .links a:hover {
-            color: #64ffda;
-        }
-
-        .role-links {
-            margin-top: 20px;
-            border-top: 1px solid #233554;
-            padding-top: 20px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .personal-link {
-            color: #3b82f6 !important; /* Blue for Personal */
-            font-weight: bold;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .admin-link {
-            color: #f59e0b !important; /* Gold for Admin */
-            font-weight: bold;
-            text-decoration: none;
-            font-size: 14px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0a192f; color: #e6f1ff; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
-        .personal-link:hover, .admin-link:hover {
-            text-decoration: underline;
-        }
+        .login-container { background-color: #112240; padding: 40px; border-radius: 8px; border: 1px solid #233554; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        
+        .logo { font-size: 28px; font-weight: bold; letter-spacing: 2px; text-align: center; margin-bottom: 10px; }
+        .logo span { color: #64ffda; }
+        .subtitle { text-align: center; color: #8892b0; font-size: 14px; margin-bottom: 30px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #ccd6f6; }
+        .form-group input { width: 100%; padding: 12px; background-color: #0a192f; border: 1px solid #233554; border-radius: 4px; color: #e6f1ff; font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .form-group input:focus { border-color: #64ffda; }
+        
+        .login-btn { width: 100%; padding: 14px; background-color: #64ffda; color: #0a192f; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; margin-bottom: 20px; }
+        .login-btn:hover { background-color: #8affdf; }
+        
+        .links { text-align: center; font-size: 13px; }
+        .links a { color: #8892b0; text-decoration: none; display: block; margin-bottom: 10px; transition: color 0.3s; }
+        .links a:hover { color: #64ffda; }
+        
+        .role-links { margin-top: 20px; border-top: 1px solid #233554; padding-top: 20px; text-align: center; display: flex; flex-direction: column; gap: 15px; }
+        
+        .personal-link { color: #3b82f6 !important; font-weight: bold; text-decoration: none; font-size: 14px; transition: 0.3s; }
+        .admin-link { color: #f59e0b !important; font-weight: bold; text-decoration: none; font-size: 14px; transition: 0.3s; }
+        
+        .personal-link:hover, .admin-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -147,6 +40,7 @@
         <div class="logo">PAY<span>RECON</span></div>
         <div class="subtitle">Secure Financial Intelligence Platform</div>
 
+        <!-- Business Login Form -->
         <form action="dashboard.html">
             <div class="form-group">
                 <label>Email Address</label>
@@ -158,7 +52,6 @@
                 <input type="password" placeholder="••••••••" required>
             </div>
 
-            <!-- Clicking this takes you to the Business Dashboard -->
             <button type="submit" class="login-btn">Sign In (Business)</button>
         </form>
 
@@ -167,9 +60,10 @@
             <a href="index.html">← Back to Homepage</a>
         </div>
 
-        <!-- The new links to access other areas -->
+        <!-- Access to other platforms -->
         <div class="role-links">
-            <a href="personal.html" class="personal-link">Access Personal Tracker</a>
+            <!-- THIS LINKS TO YOUR NEW WALLET.HTML -->
+            <a href="wallet.html" class="personal-link">Access Personal Tracker</a>
             <a href="admin.html" class="admin-link">Access Company Control Panel</a>
         </div>
     </div>
