@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAYRECON | Sync Bank Data</title>
+    <!-- Library to read Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f4f8; color: #333; display: flex; height: 100vh; }
+        
+        .sidebar { width: 250px; background-color: #1e3a8a; color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar .logo { font-size: 22px; font-weight: bold; margin-bottom: 40px; }
+        .sidebar .logo span { color: #60a5fa; }
+        .sidebar a.nav-item { color: #bfdbfe; text-decoration: none; padding: 12px 0; font-size: 16px; border-bottom: 1px solid #1e40af; }
+        .sidebar a.nav-item:hover, .sidebar a.nav-item.active { color: #60a5fa; font-weight: bold; }
+        
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; text-align: center; }
+        
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 500px; margin: 50px auto; }
+        .sync-icon { font-size: 50px; margin-bottom: 15px; }
+        .card h1 { color: #1e3a8a; margin-bottom: 10px; font-size: 24px; }
+        .card p { color: #666; margin-bottom: 30px; font-size: 14px; line-height: 1.5; }
+        
+        .btn { background-color: #10b981; color: white; border: none; padding: 15px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.3s; }
+        .btn:hover { background-color: #059669; }
+        
+        .upload-wrapper { position: relative; overflow: hidden; margin-top: 20px; }
+        .upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        
+        .status-msg { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; display: none; }
+        .status-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 15px; flex-direction: row; overflow-x: auto; align-items: center; }
+            .sidebar .logo { margin-bottom: 0; margin-right: 20px; }
+            .sidebar a.nav-item { padding: 0 15px; border-bottom: none; white-space: nowrap; }
+            .main-content { padding: 15px; }
+            .card { margin: 20px auto; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">PAY<span>RECON</span> <br><span style="font-size:12px; font-weight:normal; color:white;">Personal Tracker</span></div>
+        <a href="wallet.html" class="nav-item">My Overview</a>
+        <a href="sync.html" class="nav-item active">Sync Bank Data</a>
+        <a href="index.html" class="nav-item">Log Out</a>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <div class="sync-icon">📊</div>
+            <h1>Import Bank Statement</h1>
+            <p>Select your Excel (.xlsx, .xls) or CSV file. Our engine will automatically find the Date, Description, and Amount columns to keep your data perfectly accurate.</p>
+            
+            <div class="upload-wrapper">
+                <button class="btn">Choose Bank File</button>
+                <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" onchange="processFile(event)">
+            </div>
+            
+            <div id="statusMsg" class="status-msg"></div>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(text, type) {
+            let el = document.getElementById('statusMsg');
+            el.textContent = text; 
+            el.className = 'status-msg status-' + type; 
+            el.style.display = 'block';
+        }
+
+        function processFile(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            
+            showStatus("Reading file... please wait.", "success");
+            
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                let data = new Uint8Array(evt.target.result);
+                let workbook = XLSX.read(data, {type: 'array'});
+                let worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                
+                // Convert to JSON (array of arrays)
+                let rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                
+                let transactions = [];
+                let dateIdx = -1, descIdx = -1, amtIdx = -1, debitIdx = -1, creditIdx = -1;
+
+                // 1. SMART HEADER DETECTION: Scan the first 15 rows to find the headers
+                for (let i = 0; i < Math.min(rows.length, 15); i++) {
+                    let row = rows[i].map(cell => String(cell).toLowerCase());
+                    
+                    // Look for 'date'
+                    dateIdx = row.findIndex(c => c.includes('date'));
+                    
+                    if (dateIdx !== -1) {
+                        // Once we find 'date', find the other columns relative to it
+                        descIdx = row.findIndex(c => c.includes('desc') || c.includes('narr') || c.includes('detail') || c.includes('remark') || c.includes('particulars'));
+                        amtIdx = row.findIndex(c => c.includes('amount') || c.includes('value'));
+                        debitIdx = row.findIndex(c => c.includes('debit') || c.includes('withdraw') || c.includes('out'));
+                        creditIdx = row.findIndex(c => c.includes('credit') || c.includes('deposit') || c.includes('in'));
+                        
+                        // 2. EXTRACT DATA starting from the row AFTER the header
+                        for (let j = i + 1; j < rows.length; j++) {
+                            let r = rows[j];
+                            if (!r || !r[dateIdx]) continue; // Skip empty rows
+                            
+                            let amount = 0;
+                            
+                            // Check for split Debit/Credit columns first
+                            if (debitIdx !== -1 || creditIdx !== -1) {
+                                let deb = parseFloat(String(r[debitIdx] || "").replace(/[^0-9.-]+/g,""));
+                                let cred = parseFloat(String(r[creditIdx] || "").replace(/[^0-9.-]+/g,""));
+                                if (!isNaN(deb) && deb > 0) amount = -deb;
+                                else if (!isNaN(cred) && cred > 0) amount = cred;
+                            } 
+                            // Fallback to single Amount column
+                            else if (amtIdx !== -1) {
+                                let str = String(r[amtIdx] || "");
+                                amount = parseFloat(str.replace(/[^0-9.-]+/g,""));
+                                if (str.includes('-') && amount > 0) amount = -amount; // Handle negative signs
+                            }
+
+                            // RULE: Ignore empty amounts, 0 amounts, or suspiciously large numbers (like account numbers)
+                            if (isNaN(amount) || amount === 0 || Math.abs(amount) > 100000000) continue;
+
+                            let desc = String(r[descIdx] || "Bank Transaction");
+                            
+                            // 3. CLEAN NAME & AUTO-CATEGORIZE
+                            let name = desc.replace(/transfer|received|from|to|opay|gtb|access|kuda|zenith|uba|first|palmpay|moniepoint|wema|polaris|fidelity|fcmb|union|sterling|providus|stanbic|ecobank|heritage|keystone|unity|citibank|paystack|flutterwave/gi, '').trim() || "Unknown";
+                            
+                            let lowerDesc = desc.toLowerCase();
+                            let category = "Shopping";
+                            if (lowerDesc.includes('uber') || lowerDesc.includes('bolt') || lowerDesc.includes('transport')) category = "Transport";
+                            if (lowerDesc.includes('food') || lowerDesc.includes('restaurant') || lowerDesc.includes('market') || lowerDesc.includes('eat')) category = "Food";
+                            if (lowerDesc.includes('airtime') || lowerDesc.includes('data') || lowerDesc.includes('bill') || lowerDesc.includes('electricity')) category = "Bills";
+                            if (amount > 0) category = "Income";
+
+                            // 4. DETECT BANK (Colors & Initials)
+                            let bank = "Bank", color = "#64748b", init = "BK";
+                            if (lowerDesc.includes('opay')) { bank="OPay"; color="#00b875"; init="OP"; }
+                            else if (lowerDesc.includes('gtb') || lowerDesc.includes('guaranty')) { bank="GTBank"; color="#f59e0b"; init="GT"; }
+                            else if (lowerDesc.includes('access')) { bank="Access"; color="#1d4ed8"; init="AC"; }
+                            else if (lowerDesc.includes('kuda')) { bank="Kuda"; color="#4b5563"; init="KU"; }
+                            else if (lowerDesc.includes('zenith')) { bank="Zenith"; color="#dc2626"; init="ZE"; }
+                            else if (lowerDesc.includes('uba')) { bank="UBA"; color="#dc2626"; init="UB"; }
+                            else if (lowerDesc.includes('pos')) { bank="POS"; color="#8b5cf6"; init="PO"; }
+
+                            transactions.push({
+                                date: String(r[dateIdx]),
+                                name: name,
+                                desc: desc,
+                                bank: bank,
+                                providerColor: color,
+                                providerInitial: init,
+                                amount: amount,
+                                category: category
+                            });
+                        }
+                        break; // Stop looking for headers once we've processed the data
+                    }
+                }
+
+                // 5. SAVE AND REDIRECT
+                if (transactions.length > 0) {
+                    showStatus(`Success! Found ${transactions.length} accurate transactions. Redirecting to Wallet...`, "success");
+                    
+                    let existing = JSON.parse(localStorage.getItem('payrecon_data_v3')) || [];
+                    localStorage.setItem('payrecon_data_v3', JSON.stringify([...transactions, ...existing]));
+                    
+                    setTimeout(() => { window.location.href = "wallet.html"; }, 2000);
+                } else {
+                    showStatus("Error: Could not find a valid 'Date' and 'Amount' column in this file.", "error");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+</body>
+</html>
