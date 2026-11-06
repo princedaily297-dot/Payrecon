@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAYRECON | Connect Bank</title>
+    <!-- THIS SCRIPT ALLOWS US TO READ EXCEL FILES DIRECTLY -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f0f4f8; color: #333; display: flex; height: 100vh; }
@@ -49,7 +52,7 @@
     <div class="main-content">
         <div class="header">
             <h1>Import Real Transactions</h1>
-            <p>Securely connect your bank or upload a statement to automatically track where your money goes.</p>
+            <p>Securely upload a CSV or Excel statement directly from your bank app.</p>
         </div>
 
         <div class="sync-container">
@@ -61,12 +64,13 @@
             </div>
 
             <div class="sync-card">
-                <div class="sync-icon">📄</div>
-                <h2>Upload Bank Statement (CSV)</h2>
-                <p>Download a CSV file from your real bank app and upload it here. We will auto-categorize it.</p>
+                <div class="sync-icon">📊</div>
+                <h2>Upload Statement (Excel or CSV)</h2>
+                <p>Download a statement from your bank app and upload it here. We support .xlsx, .xls, and .csv files.</p>
                 <div class="file-upload-wrapper">
-                    <button class="btn-sync" style="background-color: #10b981;">Choose CSV File</button>
-                    <input type="file" id="csvFile" accept=".csv" onchange="handleFileUpload(event)">
+                    <button class="btn-sync" style="background-color: #10b981;">Choose File</button>
+                    <!-- UPDATED TO ACCEPT EXCEL AND CSV -->
+                    <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" onchange="handleFileUpload(event)">
                 </div>
             </div>
         </div>
@@ -75,7 +79,7 @@
 
         <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 12px;">
             <h3 style="margin-bottom: 10px; color: #1e3a8a;">Or Paste Statement Data</h3>
-            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Paste the raw text from your bank statement below. Our smart engine handles Debit, Credit, and single Amount columns.</p>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Paste the raw text from your bank statement below if you don't have a file.</p>
             <textarea id="csvInput" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;" placeholder="12/10/2026, Uber Ride, -15.00, POS&#10;11/10/2026, Salary, 3000.00, Bank"></textarea>
             <button class="btn-sync" style="width: auto; padding: 10px 20px;" onclick="processCSVData()">Process Data</button>
         </div>
@@ -101,14 +105,30 @@
             }, 3000);
         }
 
+        // --- NEW: HANDLE BOTH EXCEL AND CSV FILES ---
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                parseCSVText(e.target.result);
+                const data = new Uint8Array(e.target.result);
+                
+                // Use SheetJS to read the file as a workbook
+                const workbook = XLSX.read(data, {type: 'array'});
+                
+                // Get the first sheet
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Convert the sheet to CSV text so our smart parser can read it
+                const csvText = XLSX.utils.sheet_to_csv(worksheet);
+                
+                // Send the text to our parser
+                parseCSVText(csvText);
             };
-            reader.readAsText(file);
+            // Read file as an ArrayBuffer for Excel support
+            reader.readAsArrayBuffer(file);
         }
 
         function processCSVData() {
@@ -117,18 +137,17 @@
             parseCSVText(text);
         }
 
-        // UPGRADED SMART PARSER
+        // SMART PARSER (Handles Debit/Credit columns too)
         function parseCSVText(text) {
             const lines = text.split('\n');
             let newTransactions = [];
 
             lines.forEach(line => {
-                if (!line.trim()) return; // Skip empty lines
+                if (!line.trim()) return; 
                 
-                // Split by comma and clean up spaces
                 const parts = line.split(',').map(p => p.trim());
                 
-                // Skip the header row if it exists (e.g., "Date, Description, Amount")
+                // Skip header row
                 if (parts[0].toLowerCase().includes('date') || parts[1].toLowerCase().includes('description')) return;
 
                 if (parts.length >= 3) {
@@ -136,11 +155,9 @@
                     let desc = parts[1];
                     let amount = 0;
                     
-                    // Check for standard formats: Date, Desc, Amount
                     if (parts.length === 3 || parts.length === 4) {
-                        amount = parseFloat(parts[2].replace(/[^0-9.-]+/g,"")); // Remove commas or symbols
+                        amount = parseFloat(parts[2].replace(/[^0-9.-]+/g,"")); 
                     } 
-                    // Check for Debit/Credit formats: Date, Desc, Debit, Credit, Balance
                     else if (parts.length >= 5) {
                         let debit = parseFloat(parts[2].replace(/[^0-9.-]+/g,""));
                         let credit = parseFloat(parts[3].replace(/[^0-9.-]+/g,""));
@@ -148,9 +165,7 @@
                         else if (!isNaN(credit) && credit > 0) amount = credit;
                     }
 
-                    // If we successfully found a number
                     if (!isNaN(amount) && amount !== 0) {
-                        // Auto-categorize
                         let category = "Shopping";
                         let lowerDesc = desc.toLowerCase();
                         if (lowerDesc.includes('uber') || lowerDesc.includes('bolt') || lowerDesc.includes('transport')) category = "Transport";
@@ -173,16 +188,15 @@
             if (newTransactions.length > 0) {
                 showStatus(`Successfully imported ${newTransactions.length} real transactions! Redirecting...`, "success");
                 
-                // Save to localStorage
                 let existing = JSON.parse(localStorage.getItem('payrecon_data_v3')) || [];
                 let combined = [...newTransactions, ...existing];
                 localStorage.setItem('payrecon_data_v3', JSON.stringify(combined));
                 
                 setTimeout(() => { window.location.href = "personal.html"; }, 2000);
             } else {
-                alert("Could not read the data. Make sure the file is a valid CSV statement from your bank.");
+                alert("Could not read the data. Make sure it's a valid bank statement with Date, Description, and Amount.");
             }
         }
     </script>
 </body>
-                    </html>
+</html>
