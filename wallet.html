@@ -24,7 +24,6 @@
         .stat-card h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
         .stat-card p { font-size: 24px; font-weight: bold; color: #1e3a8a; }
 
-        /* Spending Breakdown */
         .analytics-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .analytics-section h2 { font-size: 18px; color: #1e3a8a; margin-bottom: 15px; }
         .bar-chart { display: flex; flex-direction: column; gap: 15px; }
@@ -81,7 +80,6 @@
             <div class="stat-card" style="border-left-color: #ef4444;"><h3>Money Out</h3><p id="moneyOut" style="color: #ef4444;">₦0.00</p></div>
         </div>
 
-        <!-- NEW: SPENDING BREAKDOWN CHART -->
         <div class="analytics-section">
             <h2>How Your Money Was Spent</h2>
             <div class="bar-chart" id="chartContainer">
@@ -129,7 +127,6 @@
                     moneyIn += t.amount;
                 } else {
                     moneyOut += Math.abs(t.amount);
-                    // Add to category total
                     if (!categories[t.category]) categories[t.category] = 0;
                     categories[t.category] += Math.abs(t.amount);
                 }
@@ -138,7 +135,6 @@
             document.getElementById('moneyIn').textContent = "+ ₦" + moneyIn.toLocaleString();
             document.getElementById('moneyOut').textContent = "- ₦" + moneyOut.toLocaleString();
 
-            // Render Chart
             let chartContainer = document.getElementById('chartContainer');
             chartContainer.innerHTML = '';
             const colors = { Food: "#ef4444", Transport: "#f59e0b", Bills: "#3b82f6", Shopping: "#8b5cf6", Income: "#10b981" };
@@ -159,7 +155,6 @@
                 }
             }
 
-            // Render Feed
             let feed = document.getElementById('feed');
             feed.innerHTML = transactions.length === 0 ? '<p style="color:#64748b;">No transactions. Click "Sync Bank Data".</p>' : '';
             
@@ -200,4 +195,4 @@
         render();
     </script>
 </body>
-                                                                                                                                       </html>
+</html>
