@@ -16,16 +16,14 @@
         .main-content { flex: 1; padding: 30px; overflow-y: auto; }
         .header h1 { font-size: 24px; color: #1e3a8a; margin-bottom: 10px; }
         .header p { color: #666; margin-bottom: 30px; font-size: 14px; }
-        .sync-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .sync-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
+        .sync-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; max-width: 500px; margin: 0 auto; }
         .sync-icon { font-size: 40px; margin-bottom: 15px; }
         .sync-card h2 { font-size: 18px; color: #1e3a8a; margin-bottom: 10px; }
         .sync-card p { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
-        .btn-sync { background-color: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.3s; }
-        .btn-sync:hover { background-color: #2563eb; }
+        .btn-sync { background-color: #10b981; color: white; border: none; padding: 15px 20px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.3s; }
         .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
         .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
-        .status-msg { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; display: none; }
+        .status-msg { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; display: none; text-align: center; }
         .status-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -33,7 +31,6 @@
             .sidebar .logo { margin-bottom: 0; margin-right: 20px; }
             .sidebar a.nav-item { padding: 0 15px; border-bottom: none; white-space: nowrap; }
             .main-content { padding: 15px; }
-            .sync-container { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -45,28 +42,20 @@
         <a href="index.html" class="nav-item">Log Out</a>
     </div>
     <div class="main-content">
-        <div class="header">
-            <h1>Import Real Transactions</h1>
-            <p>Upload a CSV or Excel statement. Our smart engine automatically detects any Nigerian bank.</p>
+        <div class="header" style="text-align: center;">
+            <h1>Import Bank Statement</h1>
+            <p>Upload your Excel or CSV file. We will find the exact Amount column.</p>
         </div>
-        <div class="sync-container">
-            <div class="sync-card">
-                <div class="sync-icon">🏦</div>
-                <h2>Connect Bank via API</h2>
-                <p>Coming soon.</p>
-                <button class="btn-sync" disabled style="background-color: #94a3b8;">Coming Soon</button>
+        
+        <div class="sync-card">
+            <div class="sync-icon">📊</div>
+            <h2>Select Bank File</h2>
+            <div class="file-upload-wrapper">
+                <button class="btn-sync">Choose Excel/CSV File</button>
+                <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" onchange="handleFileUpload(event)">
             </div>
-            <div class="sync-card">
-                <div class="sync-icon">📊</div>
-                <h2>Upload Statement</h2>
-                <p>Select a .xlsx, .xls, or .csv file directly from your bank.</p>
-                <div class="file-upload-wrapper">
-                    <button class="btn-sync" style="background-color: #10b981;">Choose File</button>
-                    <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" onchange="handleFileUpload(event)">
-                </div>
-            </div>
+            <div id="statusMsg" class="status-msg"></div>
         </div>
-        <div id="statusMsg" class="status-msg"></div>
     </div>
 
     <script>
@@ -83,122 +72,115 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const csvText = XLSX.utils.sheet_to_csv(worksheet);
-                parseCSVText(csvText);
+                // Read as array of arrays
+                const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                processData(rows);
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // --- ULTIMATE NIGERIAN BANK DETECTION ---
-        const bankDatabase = {
-            'opay': { name: 'OPay', color: '#00b875' },
-            'kuda': { name: 'Kuda', color: '#4b5563' },
-            'gtb': { name: 'GTBank', color: '#f59e0b' },
-            'guaranty': { name: 'GTBank', color: '#f59e0b' },
-            'access': { name: 'Access', color: '#1d4ed8' },
-            'zenith': { name: 'Zenith', color: '#dc2626' },
-            'uba': { name: 'UBA', color: '#dc2626' },
-            'first': { name: 'First Bank', color: '#1e3a8a' },
-            'palmpay': { name: 'PalmPay', color: '#7c3aed' },
-            'moniepoint': { name: 'Moniepoint', color: '#1d4ed8' },
-            'wema': { name: 'Wema', color: '#9333ea' },
-            'polaris': { name: 'Polaris', color: '#7e22ce' },
-            'fidelity': { name: 'Fidelity', color: '#065f46' },
-            'fcmb': { name: 'FCMB', color: '#8b5cf6' },
-            'union': { name: 'Union', color: '#0284c7' },
-            'sterling': { name: 'Sterling', color: '#dc2626' },
-            'providus': { name: 'Providus', color: '#4f46e5' },
-            'stanbic': { name: 'Stanbic', color: '#2563eb' },
-            'ecobank': { name: 'Ecobank', color: '#06b6d4' },
-            'heritage': { name: 'Heritage', color: '#16a34a' },
-            'keystone': { name: 'Keystone', color: '#ea580c' },
-            'unity': { name: 'Unity', color: '#d97706' },
-            'citibank': { name: 'Citibank', color: '#0284c7' },
-            'paystack': { name: 'Paystack', color: '#0ba4db' },
-            'flutterwave': { name: 'Flutterwave', color: '#f59e0b' },
-            'pos': { name: 'POS Terminal', color: '#8b5cf6' }
-        };
-
-        function detectBank(desc) {
-            let d = desc.toLowerCase();
+        function processData(rows) {
+            let newTransactions = [];
             
-            // Loop through our bank database to find a match
-            for (let key in bankDatabase) {
-                if (d.includes(key)) {
-                    return bankDatabase[key];
+            // Find the header row by looking for keywords
+            let headerRowIndex = -1;
+            let dateCol = -1, descCol = -1, amountCol = -1, debitCol = -1, creditCol = -1;
+
+            for (let i = 0; i < Math.min(rows.length, 15); i++) {
+                let row = rows[i].map(cell => String(cell).toLowerCase());
+                
+                // Look for date column
+                let dIdx = row.findIndex(c => c.includes('date'));
+                if (dIdx !== -1) {
+                    headerRowIndex = i;
+                    dateCol = dIdx;
+                    
+                    // Find description
+                    descCol = row.findIndex(c => c.includes('desc') || c.includes('narr') || c.includes('detail') || c.includes('remark'));
+                    
+                    // Find amount (either single column, or split into debit/credit)
+                    amountCol = row.findIndex(c => c.includes('amount') || c.includes('value'));
+                    debitCol = row.findIndex(c => c.includes('debit') || c.includes('withdraw'));
+                    creditCol = row.findIndex(c => c.includes('credit') || c.includes('deposit'));
+                    
+                    break;
                 }
             }
 
-            // SMART FALLBACK: If it's an unknown bank, grab the first 2 letters of the description
-            let words = desc.split(' ');
-            let initials = words.length > 0 ? words[0].substring(0, 2).toUpperCase() : "BK";
-            return { name: "Bank Transfer", color: "#64748b", customInitial: initials };
-        }
+            // If we couldn't find a header, fall back to assuming column 0 is date, 1 is desc, 2 is amount
+            if (headerRowIndex === -1) {
+                headerRowIndex = 0;
+                dateCol = 0; descCol = 1; amountCol = 2;
+            }
 
-        function parseCSVText(text) {
-            const lines = text.split('\n');
-            let newTransactions = [];
-            const dateRegex = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})|(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})|([0-9]{1,2}\s+[A-Za-z]{3}\s+[0-9]{2,4})/;
+            // Loop through rows starting AFTER the header
+            for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                let row = rows[i];
+                if (!row || row.length === 0) continue;
 
-            lines.forEach(line => {
-                if (!line.trim()) return;
-                const parts = line.split(',').map(p => p.trim());
-                if (parts.length < 3) return;
-
-                let date = parts[0];
-                let desc = parts[1] || "";
-                if (!dateRegex.test(date)) return;
-
-                let lowerDesc = desc.toLowerCase();
-                if (lowerDesc.includes('total') || lowerDesc.includes('balance') || lowerDesc.includes('closing') || lowerDesc.includes('opening')) return;
+                let date = row[dateCol];
+                let desc = row[descCol] || "Bank Transaction";
+                
+                if (!date) continue; // Skip empty rows
 
                 let amount = 0;
-                let cleanNum = (str) => {
-                    if (!str) return NaN;
-                    let cleaned = str.replace(/[^0-9.-]+/g,""); 
-                    if (cleaned.replace(/[.-]/g, '').length > 10) return NaN; 
-                    return parseFloat(cleaned);
-                };
 
-                if (parts.length === 3 || parts.length === 4) {
-                    amount = cleanNum(parts[2]);
-                } else if (parts.length >= 5) {
-                    let debit = cleanNum(parts[2]);
-                    let credit = cleanNum(parts[3]);
+                // If we found Debit/Credit columns
+                if (debitCol !== -1 || creditCol !== -1) {
+                    let debit = parseFloat(String(row[debitCol] || "").replace(/[^0-9.-]+/g,""));
+                    let credit = parseFloat(String(row[creditCol] || "").replace(/[^0-9.-]+/g,""));
+                    
                     if (!isNaN(debit) && debit > 0) amount = -debit;
                     else if (!isNaN(credit) && credit > 0) amount = credit;
+                } 
+                // If we found a single Amount column
+                else if (amountCol !== -1) {
+                    let amtStr = String(row[amountCol] || "");
+                    // Check if it has a minus sign or DR/CR
+                    let isDebit = amtStr.includes('-') || amtStr.toLowerCase().includes('dr');
+                    amount = parseFloat(amtStr.replace(/[^0-9.-]+/g,""));
+                    if (isDebit && amount > 0) amount = -amount;
                 }
 
-                if (isNaN(amount) || amount === 0 || Math.abs(amount) > 100000000) return;
+                // Ignore if amount is zero, NaN, or suspiciously large (like an account number)
+                if (isNaN(amount) || amount === 0 || Math.abs(amount) > 100000000) continue;
 
+                // Categorize
+                let lowerDesc = String(desc).toLowerCase();
                 let category = "Shopping";
-                if (lowerDesc.includes('uber') || lowerDesc.includes('bolt') || lowerDesc.includes('transport')) category = "Transport";
-                if (lowerDesc.includes('food') || lowerDesc.includes('market') || lowerDesc.includes('eat')) category = "Food";
-                if (lowerDesc.includes('airtime') || lowerDesc.includes('data') || lowerDesc.includes('bill')) category = "Bills";
+                if (lowerDesc.includes('uber') || lowerDesc.includes('bolt')) category = "Transport";
+                if (lowerDesc.includes('food') || lowerDesc.includes('market')) category = "Food";
                 if (amount > 0) category = "Income";
 
-                // Detect Bank
-                let bankInfo = detectBank(desc);
+                // Assign icon based on description
+                let providerName = "Bank";
+                let providerColor = "#64748b";
+                let providerInitial = "BK";
+                
+                if (lowerDesc.includes('opay')) { providerName = "OPay"; providerColor = "#00b875"; providerInitial = "OP"; }
+                else if (lowerDesc.includes('kuda')) { providerName = "Kuda"; providerColor = "#4b5563"; providerInitial = "KU"; }
+                else if (lowerDesc.includes('gtb') || lowerDesc.includes('guaranty')) { providerName = "GTB"; providerColor = "#f59e0b"; providerInitial = "GT"; }
+                else if (lowerDesc.includes('access')) { providerName = "Access"; providerColor = "#1d4ed8"; providerInitial = "AC"; }
 
                 newTransactions.push({
-                    date: date,
-                    providerName: bankInfo.name,
-                    providerColor: bankInfo.color,
-                    providerInitial: bankInfo.customInitial || bankInfo.name.substring(0, 2).toUpperCase(),
-                    desc: desc,
+                    date: String(date),
+                    providerName: providerName,
+                    providerColor: providerColor,
+                    providerInitial: providerInitial,
+                    desc: String(desc),
                     amount: amount,
                     category: category
                 });
-            });
+            }
 
             if (newTransactions.length > 0) {
-                showStatus(`Successfully extracted ${newTransactions.length} transactions! Redirecting...`, "success");
+                showStatus(`Successfully found ${newTransactions.length} transactions! Redirecting...`, "success");
                 let existing = JSON.parse(localStorage.getItem('payrecon_data_v3')) || [];
                 let combined = [...newTransactions, ...existing];
                 localStorage.setItem('payrecon_data_v3', JSON.stringify(combined));
                 setTimeout(() => { window.location.href = "personal.html"; }, 2000);
             } else {
-                alert("Could not find any valid transaction rows.");
+                alert("Could not find valid transactions. Please check that your file has columns for Date, Description, and Amount.");
             }
         }
     </script>
